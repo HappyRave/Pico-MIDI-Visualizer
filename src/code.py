@@ -1,21 +1,23 @@
-import display
-#import dotstar
-import midi
+"""
+
+Main module
+
+"""
+
 import time
+import display
+# import dotstar
+import midi
 
-
-
-n = 0
-i = 0
+N, i = 0, 0
 while True:
     msg = midi.read_midi()
-    if msg != None:
+    if msg is not None:
         print(msg.note)
         display.update_data(str(msg.note))
     else:
-        n += 1
-        if (n % 4 == 0):
-            n = 0
+        N = (N + 1) % 4
+        if N == 0:
             i += 1
             display.update_data('No data ' + str(i))
     time.sleep(0.25)

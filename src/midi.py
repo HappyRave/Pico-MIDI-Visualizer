@@ -1,6 +1,15 @@
+"""
+midi
+"""
+
+# pylint: disable=E0401 disable=E0611 disable=E1101
+# ignore load error on circuitpython modules
 import usb_midi
 import adafruit_midi
 
+
+# pylint: disable=W0611
+# unused modules are still important for midi parsing
 from adafruit_midi.timing_clock import TimingClock
 from adafruit_midi.channel_pressure import ChannelPressure
 from adafruit_midi.control_change import ControlChange
@@ -20,4 +29,7 @@ midi = adafruit_midi.MIDI(midi_in=portIn, in_channel=0)
 
 
 def read_midi():
+    """
+    A short description.
+    """
     return midi.receive()

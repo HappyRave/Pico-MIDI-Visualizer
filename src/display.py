@@ -15,6 +15,7 @@ GP18 - SCL
 GND  - GND
 """
 
+import time
 import os
 # pylint: disable=E0401
 # ignore load error on circuitpython modules
@@ -26,6 +27,7 @@ import busio
 # pylint not fiding name label
 from adafruit_display_text import label
 import adafruit_st7789 as display_st7789
+import adafruit_imageload
 
 print("==============================")
 # pylint: disable=E1101
@@ -48,28 +50,39 @@ spi = busio.SPI(spi_clk, MOSI=spi_mosi)
 display_bus = displayio.FourWire(spi, command=tft_dc, chip_select=tft_cs)
 
 display = display_st7789.ST7789(
-    display_bus, width=135, height=240, rowstart=40, colstart=53)
+    display_bus, width=240, height=135, rowstart=40, colstart=53, rotation=90)
 
 # Make the display context
 splash = displayio.Group(max_size=10)
 display.show(splash)
 
-color_bitmap = displayio.Bitmap(135, 240, 1)
+color_bitmap = displayio.Bitmap(240, 135, 1)
 color_palette = displayio.Palette(1)
 color_palette[0] = 0x00FF00  # green
 
 bg_sprite = displayio.TileGrid(color_bitmap,
                                pixel_shader=color_palette, x=0, y=0)
-splash.append(bg_sprite)  # 0
+splash.append(bg_sprite)
 
 # Draw a smaller inner rectangle
-inner_bitmap = displayio.Bitmap(133, 238, 16)
-inner_palette = displayio.Palette(2)
+inner_bitmap = displayio.Bitmap(238, 133, 16)
+inner_palette = displayio.Palette(1)
 inner_palette[0] = 0x0000FF  # blue
-inner_palette[1] = 0xCC00A4  # purple
 inner_sprite = displayio.TileGrid(inner_bitmap,
                                   pixel_shader=inner_palette, x=1, y=1)
-splash.append(inner_sprite)  # 1
+splash.append(inner_sprite)
+
+# bitmap test
+bitmap, palette = adafruit_imageload.load(
+    "/bmp/btn_OK.bmp", bitmap=displayio.Bitmap, palette=displayio.Palette)
+palette.make_transparent(0)
+
+tile_grid = displayio.TileGrid(
+    bitmap, pixel_shader=palette, width=1,
+    height=1, tile_width=30, tile_height=67)
+
+tile_group = displayio.Group(max_size=2, scale=1, x=120, y=20)
+tile_group.append(tile_grid)
 
 # Draw a label
 text_group1 = displayio.Group(max_size=10, scale=2, x=20, y=40)
@@ -82,11 +95,26 @@ TEXT2 = "no data"
 text_area2 = label.Label(terminalio.FONT, text=TEXT2, color=0xFFFFFF)
 text_group2.append(text_area2)  # Subgroup for text scaling
 
-splash.append(text_group1)  # 2
-splash.append(text_group2)  # 3
+splash.append(text_group1)
+splash.append(text_group2)
+
+splash.append(tile_group)
 
 
 def update_data(text):
     """ update_data """
     text_area = label.Label(terminalio.FONT, text=text, color=0xFFFFFF)
     text_group2[0] = text_area
+
+
+def cycle_btn(source):
+    """ cycle """
+    tile_grid[0, 0] = source
+
+
+tile_source = 0
+
+for i in range(0, 10):
+    tile_grid[0, 0] = tile_source
+    tile_source = (tile_source + 1) % 2
+    time.sleep(2)
